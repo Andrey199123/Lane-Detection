@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Video Stream</title>
+  <link rel="stylesheet" href="static/style.css">
+</head>
+<body>
+  <div class="grid-container">
+    <!-- Top Left: Video Stream -->
+    <div class="grid-item camera-view">
+      <img src="/video_feed" id="stream" alt="Camera Feed" width="640" height="480">
+    </div>
+
+    <!-- Top Right: Robot Controls -->
+    <div class="grid-item controls-container">
+      <h1 class="title">Robot Control Interface</h1>
+      <div class="arrow-controls">
+        <button class="arrow-btn" data-command="forward">&#9650;</button>
+        <div class="center-controls">
+          <button class="arrow-btn" data-command="left">&#9664;</button>
+          <!-- Removed "arrow-btn" class from pause/resume button -->
+          <button id="pause-resume-btn" class="center-btn" data-command="stop">Pause</button>
+          <button class="arrow-btn" data-command="right">&#9654;</button>
+        </div>
+        <button class="arrow-btn" data-command="backward">&#9660;</button>
+      </div>
+    </div>
+
+    <!-- Bottom Left: Roads View -->
+    <div class="grid-item roads-view">
+      <img id="overlay-stream" src="/overlay_feed" alt="Overlay Video Stream">
+    </div>
+
+    <!-- Bottom Right: Logs -->
+    <div class="grid-item logs">
+      <div class="log-buttons">
+        <button id="api-log-btn" class="log-btn active">API Output Log</button>
+        <button id="login-log-btn" class="log-btn">Login Record Log</button>
+      </div>
+      <pre id="log-content" class="log-display">Loading logs...</pre>
+    </div>
+  </div>
+
+  <script>
+    // Function to send commands to the backend (for arrow buttons only)
+    function sendCommand(command) {
+      fetch('/move', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ command: command }),
+      })
+      .then(response => response.json())
+      .then(data => {
+        console.log('Success:', data);
+      })
+      .catch((error) => {
+        console.error('Error:', error);
+      });
+    }
+
+    // Add event listeners to the arrow buttons only (exclude the pause/resume button)
+    document.querySelectorAll('.arrow-btn').forEach(button => {
+      button.addEventListener('click', () => {
+        const command = button.getAttribute('data-command');
+        sendCommand(command);
+      });
+    });
+
+    // Add event listener to the Pause/Resume button (calls /toggle_play)
+    const pauseResumeButton = document.getElementById('pause-resume-btn');
+    pauseResumeButton.addEventListener('click', () => {
+      fetch("http://127.0.0.1:10000/toggle_play", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.status === "Playing") {
+          pauseResumeButton.textContent = "Pause";
+        } else if (data.status === "Paused") {
+          pauseResumeButton.textContent = "Resume";
+        }
+      })
+      .catch(error => {
+        console.error("Error:", error);
+      });
+    });
+  </script>
+
+  <script>
+    const logContent = document.getElementById("log-content");
+    const apiLogBtn = document.getElementById("api-log-btn");
+    const loginLogBtn = document.getElementById("login-log-btn");
+
+    function fetchLogs(filename) {
+      fetch(`/logs/${filename}`)
+        .then((response) => response.text())
+        .then((data) => {
+          logContent.textContent = data;
+        })
+        .catch((error) => {
+          logContent.textContent = `Error fetching logs: ${error}`;
+        });
+    }
+
+    apiLogBtn.addEventListener("click", () => {
+      fetchLogs("api_output.log");
+      apiLogBtn.classList.add("active");
+      loginLogBtn.classList.remove("active");
+    });
+
+    loginLogBtn.addEventListener("click", () => {
+      fetchLogs("login_record.log");
+      loginLogBtn.classList.add("active");
+      apiLogBtn.classList.remove("active");
+    });
+
+    // Load API output log by default
+    fetchLogs("api_output.log");
+  </script>
+</body>
+</html>

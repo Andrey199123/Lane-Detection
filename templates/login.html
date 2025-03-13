@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='mdb.dark.min.css')}}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='mdb.dark.min.css.map')}}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='mdb.dark.rtl.min.css')}}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='mdb.min.css')}}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='mdb.min.css.map')}}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='fmdb.rtl.min.css')}}">
+    <style>
+        /* Ensure labels float above when input has content */
+        .form-outline .form-control:focus~.form-label,
+        .form-outline .form-control:not(:placeholder-shown)~.form-label {
+            transform: translateY(-1.5em) scale(0.8);
+            color: #3f51b5;
+        }
+
+        /* Prevent placeholder from displaying once input has value */
+        .form-outline .form-control:not(:placeholder-shown) {
+            color: #000;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/js/all.min.js"
+        integrity="sha512-GWzVrcGlo0TxTRvz9ttioyYJ+Wwk9Ck0G81D+eO63BaqHaJ3YZX9wuqjwgfcV/MrB2PhaVX9DkYVhbFpStnqpQ=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+</head>
+
+<body>
+    <form class="col-12 col-md-6 mx-auto mt-5" id="login_form">
+        <ul class="nav nav-pills nav-justified mb-3" id="ex1" role="tablist">
+            <li class="nav-item" role="presentation">
+                <a class="nav-link active" id="tab-login" data-mdb-toggle="pill" href="#pills-login" role="tab"
+                    aria-controls="pills-login" aria-selected="true">Login</a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link" id="tab-register" data-mdb-toggle="pill" href="#pills-register" role="tab"
+                    aria-controls="pills-register" aria-selected="false">Register</a>
+            </li>
+        </ul>
+        <div class="tab-content">
+            <div class="tab-pane fade show active" id="pills-login" role="tabpanel" aria-labelledby="tab-login">
+                <p class="text-center" style="font-size: 22px !important;">Hello! Please log in with your Five Guys
+                    credentials to access the admin dashboard.</p>
+                <br />
+                <div class="form-outline mb-4">
+                    <input type="text" id="username_or_email" name="username_or_email" class="form-control"
+                        placeholder=" " />
+                    <label class="form-label" for="username_or_email">Email or username</label>
+                </div>
+                <div class="form-outline mb-4">
+                    <input type="password" id="loginPassword" name="password" class="form-control" placeholder=" " />
+                    <label class="form-label" for="loginPassword">Password</label>
+                </div>
+                <input type="hidden" name="form_type" value="login">
+                <button id="loginSubmit" type="submit" class="btn btn-primary btn-block mb-4">Sign in</button>
+            </div>
+        </div>
+    </form>
+
+    <form class="col-12 col-md-6 mx-auto mt-5" id="register_form">
+        <div class="tab-content">
+            <div class="tab-pane fade" id="pills-register" role="tabpanel" aria-labelledby="tab-register">
+                <p class="text-center" style="font-size: 22px !important;">Hello! Please sign up for a Five Guys admin
+                    account.</p>
+                <br />
+                <div class="form-outline mb-4">
+                    <input type="text" id="name" name="name" class="form-control" placeholder=" " />
+                    <label class="form-label" for="name">Name</label>
+                </div>
+                <div class="form-outline mb-4">
+                    <input type="text" id="username" name="username" class="form-control" placeholder=" " />
+                    <label class="form-label" for="username">Username</label>
+                </div>
+                <div class="form-outline mb-4">
+                    <input type="email" id="email" name="email" class="form-control" placeholder=" " />
+                    <label class="form-label" for="email">Email</label>
+                </div>
+                <div class="form-outline mb-4">
+                    <input type="password" id="password" name="password" class="form-control" placeholder=" " />
+                    <label class="form-label" for="password">Password</label>
+                </div>
+                <input type="hidden" name="form_type" value="register">
+                <button id="registerSubmit" type="submit" class="btn btn-primary btn-block mb-3">Sign up</button>
+            </div>
+        </div>
+    </form>
+
+    <script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/mdb.umd.min.js') }}"></script>
+    <script>
+        $(document).ready(function () {
+            // Initialize tab functionality
+            const tabTriggerList = [].slice.call(document.querySelectorAll('#ex1 .nav-link'))
+            tabTriggerList.forEach(function (tabTriggerEl) {
+                const tabTrigger = new mdb.Tab(tabTriggerEl)
+                tabTriggerEl.addEventListener('click', function (event) {
+                    event.preventDefault()
+                    tabTrigger.show()
+                })
+            });
+
+            $('.form-outline input').each(function () {
+                if ($(this).val()) {
+                    $(this).next('label').addClass('active');
+                }
+            });
+
+            $('.form-outline input').on('focus blur input', function (e) {
+                const label = $(this).next('label');
+                if (e.type === 'focus' || $(this).val().length > 0) {
+                    label.addClass('active');
+                } else {
+                    label.removeClass('active');
+                }
+            });
+
+            $('#loginSubmit').click(function (e) {
+                e.preventDefault();
+
+                const loginData = {
+                    username_or_email: $('#username_or_email').val(),
+                    password: $('#loginPassword').val(),
+                    form_type: 'login'
+                };
+
+                $.ajax({
+                    url: '/',
+                    type: 'POST',
+                    data: JSON.stringify(loginData),
+                    contentType: 'application/json',
+                    success: function (response) {
+                        if (response.success) {
+                            window.location.href = response.redirect_url;
+                        } else {
+                            alert(response.message);
+                        }
+                    },
+                    error: function () {
+                        alert('An error occurred. Please try again.');
+                    }
+                });
+            });
+
+            $('#registerSubmit').click(function (e) {
+                e.preventDefault();
+
+                const registerData = {
+                    name: $('#name').val(),
+                    username: $('#username').val(),
+                    email: $('#email').val(),
+                    password: $('#password').val(),
+                    form_type: 'register'
+                };
+
+                $.ajax({
+                    url: '/',
+                    type: 'POST',
+                    data: JSON.stringify(registerData),
+                    contentType: 'application/json',
+                    success: function (response) {
+                        if (response.success) {
+                            alert(response.message);
+                            $('#tab-login').click();
+                        } else {
+                            alert(response.message);
+                        }
+                    },
+                    error: function () {
+                        alert('An error occurred. Please try again.');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>
